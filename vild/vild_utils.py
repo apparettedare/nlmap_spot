@@ -269,7 +269,7 @@ def draw_bounding_box_on_image(image,
   # If the total height of the display strings added to the top of the bounding
   # box exceeds the top of the image, stack the strings below the bounding box
   # instead of above.
-  display_str_heights = [font.getsize(ds)[1] for ds in display_str_list]
+  display_str_heights = [font.getbbox(ds)[1] for ds in display_str_list]
   # Each display_str has a top and bottom margin of 0.05x.
   total_display_str_height = (1 + 2 * 0.05) * sum(display_str_heights)
 
@@ -280,7 +280,9 @@ def draw_bounding_box_on_image(image,
   # Reverse list and print from bottom to top.
   for display_str in display_str_list[::-1]:
     text_left = min(5, left)
-    text_width, text_height = font.getsize(display_str)
+    bbox = font.getbbox(display_str)
+    text_width = bbox[2] - bbox[0]  # 幅 = 右端 - 左端
+    text_height = bbox[3] - bbox[1]  # 高さ = 下端 - 上端
     margin = np.ceil(0.05 * text_height)
     draw.rectangle(
         [(left, text_bottom - text_height - 2 * margin), (left + text_width,
@@ -673,7 +675,7 @@ def extract_roi_vild(image_path,session,params):
   # Filter out invalid rois (nmsed rois)
   valid_indices = np.where(
       np.logical_and(
-        np.isin(np.arange(len(roi_scores), dtype=np.int), nmsed_indices),
+        np.isin(np.arange(len(roi_scores), dtype=int), nmsed_indices),
         np.logical_and(
             np.logical_not(np.all(roi_boxes == 0., axis=-1)),
             np.logical_and(
@@ -825,25 +827,30 @@ def vild_main(image_path, category_name_string, params, temperature=100.0, use_s
 
 if __name__ == "__main__":
   #image_path = './examples/five_women_and_umbrellas.jpg'  #@param {type:"string"}
-  image_path= "/home/eric/Github/robot-vision/spot-images/hand_color_image18.jpg"
+  image_path= "/home/sobits/catkin_ws/src/vild/examples/image3.jpg"
   display_input_size=(10,10)
   display_image(image_path, size=display_input_size)
 
   
-  category_name_string = ';'.join(['flipflop', 'street sign', 'bracelet',
-        'necklace', 'shorts', 'floral camisole', 'orange shirt',
-        'purple dress', 'yellow tee', 'green umbrella', 'pink striped umbrella', 
-        'transparent umbrella', 'plain pink umbrella', 'blue patterned umbrella',
-        'koala', 'electric box','car', 'pole'])
+  # category_name_string = ';'.join(['flipflop', 'street sign', 'bracelet',
+  #       'necklace', 'shorts', 'floral camisole', 'orange shirt',
+  #       'purple dress', 'yellow tee', 'green umbrella', 'pink striped umbrella', 
+  #       'transparent umbrella', 'plain pink umbrella', 'blue patterned umbrella',
+  #       'koala', 'electric box','car', 'pole'])
+  category_name_string = ';'.join(['snack', 'shoes', 'chair', 'blanket', 'green tape', 'pet bottle', 'pringles', 'pen case', 'banana', 'blue pen', 'black pen', 'yellow pen', 'red pen', 'locker', 'table', 'sofa'])
 
 
-  session = tf.Session(graph=tf.Graph())
+  # session = tf.Session(graph=tf.Graph())
+  session = tf.compat.v1.Session(graph=tf.Graph())
+  print(type(session))
+  saved_model_dir = '/home/sobits/catkin_ws/src/vild/image_path_v2' #@param {type:"string"}
 
-
-  saved_model_dir = './image_path_v2' #@param {type:"string"}
-
-  _ = tf.saved_model.loader.load(session, ['serve'], saved_model_dir)
-
+  session = tf.Session()
+  model = tf.saved_model.loader.load(session, ['serve'], saved_model_dir)
+  print("Model loaded successfully")
+  # model = tf.saved_model.load(saved_model_dir)
+  infer = model.signatures
+  print(infer)
   numbered_categories = [{'name': str(idx), 'id': idx,} for idx in range(50)]
   numbered_category_indices = {cat['id']: cat for cat in numbered_categories}
   

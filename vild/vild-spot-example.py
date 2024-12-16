@@ -194,7 +194,7 @@ def build_text_embedding(categories):
 session = tf.Session(graph=tf.Graph())
 
 
-saved_model_dir = './image_path_v2' #@param {type:"string"}
+saved_model_dir = '/home/sobits/catkin_ws/src/vild/image_path_v2' #@param {type:"string"}
 
 _ = tf.saved_model.loader.load(session, ['serve'], saved_model_dir)
 
@@ -318,7 +318,7 @@ def draw_bounding_box_on_image(image,
   # If the total height of the display strings added to the top of the bounding
   # box exceeds the top of the image, stack the strings below the bounding box
   # instead of above.
-  display_str_heights = [font.getsize(ds)[1] for ds in display_str_list]
+  display_str_heights = [font.getbbox(ds)[1] for ds in display_str_list]
   # Each display_str has a top and bottom margin of 0.05x.
   total_display_str_height = (1 + 2 * 0.05) * sum(display_str_heights)
 
@@ -329,7 +329,9 @@ def draw_bounding_box_on_image(image,
   # Reverse list and print from bottom to top.
   for display_str in display_str_list[::-1]:
     text_left = min(5, left)
-    text_width, text_height = font.getsize(display_str)
+    bbox = font.getbbox(display_str)
+    text_width = bbox[2] - bbox[0]  # 幅 = 右端 - 左端
+    text_height = bbox[3] - bbox[1]  # 高さ = 下端 - 上端
     margin = np.ceil(0.05 * text_height)
     draw.rectangle(
         [(left, text_bottom - text_height - 2 * margin), (left + text_width,
@@ -715,7 +717,7 @@ def main(image_path, category_name_string, params):
   # Filter out invalid rois (nmsed rois)
   valid_indices = np.where(
       np.logical_and(
-        np.isin(np.arange(len(roi_scores), dtype=np.int), nmsed_indices),
+        np.isin(np.arange(len(roi_scores), dtype=int), nmsed_indices),
         np.logical_and(
             np.logical_not(np.all(roi_boxes == 0., axis=-1)),
             np.logical_and(
@@ -843,16 +845,17 @@ def main(image_path, category_name_string, params):
 
 if __name__ == "__main__":
   #image_path = './examples/five_women_and_umbrellas.jpg'  #@param {type:"string"}
-  image_path= "../spot-images/hand_color_image18.jpg"
+  image_path= "/home/sobits/catkin_ws/src/vild/examples/image3.jpg"
   display_image(image_path, size=display_input_size)
 
   
-  category_name_string = ';'.join(['flipflop', 'street sign', 'bracelet',
-        'necklace', 'shorts', 'floral camisole', 'orange shirt',
-        'purple dress', 'yellow tee', 'green umbrella', 'pink striped umbrella', 
-        'transparent umbrella', 'plain pink umbrella', 'blue patterned umbrella',
-        'koala', 'electric box','car', 'pole'])
-  
+  # category_name_string = ';'.join(['flipflop', 'street sign', 'bracelet',
+  #       'necklace', 'shorts', 'floral camisole', 'orange shirt',
+  #       'purple dress', 'yellow tee', 'green umbrella', 'pink striped umbrella', 
+  #       'transparent umbrella', 'plain pink umbrella', 'blue patterned umbrella',
+  #       'koala', 'electric box','car', 'pole'])
+  category_name_string = ';'.join(['snack', 'shoes', 'chair', 'blanket', 'green tape', 'pet bottle', 'pringles', 'pen case', 'banana', 'blue pen', 'black pen', 'yellow pen', 'red pen', 'locker', 'table', 'sofa'])
+
   #category_name_string = "Table; Chair; Sofa; Lamp; Rug; Television; Fireplace; Pillow; Blanket; Clock; Picture frame; Vase; Lampshade; Candlestick; Books; Magazines; DVD player; CD player; Record player; Video game console; Board game; Card game; Chess set; Backgammon set; Carpet; Drapes; Blinds; Shelving unit; Side table; Coffee table; Footstool; Armchair; Bean bag; Desk; Office chair; Computer; Printer; Scanner; Fax machine; Telephone; Cell phone; Lamp; Lamp; Rug; Trash can; Wastebasket; Vacuum cleaner; Broom; Dustpan; Mop; Bucket; Dust cloth; Cleaning supplies; Iron; Ironing board; Hair dryer; Curling iron; Toilet brush; Towels; Soap; Shampoo; Toothbrush; Toothpaste; Razor; Shaving cream; Deodorant; Hairbrush; Hair ties; Makeup; Nail polish; Perfume; Cologne; Laundry basket; Clothes hanger; Closet; Dresser; Bed; Mattress; Pillows; Sheets; Blanket; Comforter; Quilt; Bedspread; Nightstand; Alarm clock; Lamp; Lamp; Rug"
   max_boxes_to_draw = 25 #@param {type:"integer"}
 

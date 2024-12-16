@@ -105,6 +105,7 @@ class NLMap():
 				self.pcd = make_pointcloud(data_path=f"{self.data_dir_path}/",pose_data_fname=self.config["file_names"]["pose"], pointcloud_fname=self.config["file_names"]["pointcloud"])
 
 		### Text initialization
+		print(self.config["text"]["category_name_string"].split(';'))
 		self.category_names = [x.strip() for x in self.config["text"]["category_name_string"].split(';')]
 		self.categories = [{'name': item, 'id': idx+1,} for idx, item in enumerate(self.category_names)]
 		self.category_indices = {cat['id']: cat for cat in self.categories}
@@ -495,6 +496,6 @@ if __name__ == "__main__":
 	nlmap = NLMap(args.config_path)
 
 	### Example things to do 
-	#nlmap.viz_pointcloud()
-	#nlmap.viz_top_k(viz_2d=True,viz_pointcloud=False)
-	nlmap.go_to_and_pick_top_k("Cup")
+	nlmap.viz_pointcloud()
+	# nlmap.viz_top_k(viz_2d=True,viz_pointcloud=False)
+	# nlmap.go_to_and_pick_top_k("Cup")
